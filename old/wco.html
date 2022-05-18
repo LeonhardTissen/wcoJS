@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title></title>
+	<style type="text/css">
+		@font-face {
+			font-family: "Gob";
+			src: url("https://warze.org/static/Gobsayer-Regular.ttf");
+		}
+		* {
+			user-select: none;
+			font-family: "Gob";
+			margin: 0;
+			text-decoration: none;
+			color: white;
+			image-rendering: pixelated;
+		}
+		#newcommandwin {
+			position: fixed;
+			right: 0;
+			width: 50%;
+			background-color: #444;
+			height: 50px;
+			top: 0;
+		}
+		#commandwin {
+			position:fixed;
+			right:0;
+			top: 50px;
+			width:50%;
+			background-color: #555;
+			padding: 20px;
+		}
+		#editwin {
+			position: fixed;
+			bottom: 0;
+			left: 0;
+			width: 50%;
+			min-height: 20px;
+			background-color: #555;
+		}
+		newcmd {
+			font-size: 25px;
+		}
+		newcmd:hover {
+			background-color: #333;
+		}
+		params {
+			margin-left: 20px;
+			color: grey;
+		}
+		params:hover {
+			background-color: #444;
+		}
+		remove {
+			color: indianred;
+			cursor: pointer;
+		}
+		remove:hover {
+			background-color: darkred;
+		}
+		dupe {
+			color: greenyellow;
+			cursor: pointer;
+		}
+		dupe:hover {
+			background-color: darkgreen;
+		}
+		edit {
+			color: lightblue;
+			cursor: pointer;
+		}
+		edit:hover {
+			background-color: darkslateblue;
+		}
+		label {
+			font-size: 40px;
+			vertical-align: top;
+		}
+		input {
+			font-size: 50px;
+			background-color: transparent;
+			display: inline-block;
+			height: 40px;
+		}
+		input[type="range"] {
+			width: 400px;
+		}
+		#generatedcode {
+			user-select: all;
+			overflow: hidden;
+		}
+		#zoomrange {
+			position: fixed;
+			width: 120px;
+			right: 0;
+			bottom: 0;
+		}
+		#background {
+			position: fixed;
+			bottom: 40px;
+			right: 0;
+			width: 120px;
+		}
+		#import {
+			position: fixed;
+			right: 0;
+			bottom: 100px;
+			color: black;
+			font-size: 30px;
+		}
+	</style>
+	<script type="text/javascript" src="wco.js"></script>
+</head>
+<body style="background-color: #666">
+	<h1 id="generatedcode"></h1>
+	<input id="overlayopacity" style="position:fixed;bottom:180px;right:0;width:150px" type="range" min="0" max="1" value="0.1" step="0.01" oninput="overlay.style.opacity = this.value;">
+	<div id="overlay" src="empty" style="z-index: 2;width: 999px;height: 999px;background-repeat: no-repeat;transform-origin: 0px 0px; position:fixed; top:50px;opacity:0.1;pointer-events: none;"></div>
+	<canvas style="position: fixed;top: 50px;outline:1px solid white;transform-origin: 0px 0px;background-image:url(ground0.png); background-position: 100px 100px; background-repeat: no-repeat" id="generated"></canvas>
+	<img src="" id="previewimg" style="position:fixed;right:0;bottom:200px">
+	<input type="file" oninput="
+		var fr = new FileReader();
+        fr.onload = function () {
+            overlay.style.backgroundImage = 'url(' + fr.result + ')';
+            previewimg.src = fr.result
+        }
+        fr.readAsDataURL(this.files[0]);
+        " style="position:fixed;right:0;bottom:150px; font-size:20px">
+	<button id="import" onclick="commands = wcogenerate(generated, prompt('Enter Code'), 'commands');showCommands();">Import code</button>
+	<input id="zoomrange" type="range" min="1" max="3" value="1" step="0.1" oninput="generated.style.transform = 'scale(' + this.value + ')'; overlay.style.transform = 'scale(' + this.value + ')';">
+	<input id="background" type="number" value="0" min="0" max="30" oninput="generated.style.backgroundImage = 'url(ground' + this.value + '.png)'">
+	<div id="newcommandwin">
+		<newcmd onclick="commands.push(['Draw Cube', ['#A0A0B0', '#707080', '#808090', 50, 50, 50]]);showCommands();generate();edit(commands.length-1);">Cube</newcmd>
+		<newcmd onclick="commands.push(['Draw Cuboid', ['#A0A0B0', '#707080', '#808090', 50, 50, 50, 50, 50]]);showCommands();generate();edit(commands.length-1);">Cuboid</newcmd>
+		<newcmd onclick="commands.push(['Draw Top Square', ['#A0A0B0', 50, 50, 50]]);showCommands();generate();edit(commands.length-1);">TopSquare</newcmd>
+		<newcmd onclick="commands.push(['Draw Top Rectangle', ['#A0A0B0', 50, 50, 50, 50]]);showCommands();generate();edit(commands.length-1);">TopRect</newcmd>
+		<newcmd onclick="commands.push(['Draw Front Square', ['#707080', 50, 50, 50]]);showCommands();generate();edit(commands.length-1);">FrontSquare</newcmd>
+		<newcmd onclick="commands.push(['Draw Front Rectangle', ['#707080', 50, 50, 50, 50]]);showCommands();generate();edit(commands.length-1);">FrontRect</newcmd>
+		<newcmd onclick="commands.push(['Draw Side Square', ['#808090', 50, 50, 50]]);showCommands();generate();edit(commands.length-1);">SideSquare</newcmd>
+		<newcmd onclick="commands.push(['Draw Side Rectangle', ['#808090', 50, 50, 50, 50]]);showCommands();generate();edit(commands.length-1);">SideRect</newcmd>
+		<newcmd onclick="commands.push(['Draw Front Gradient', ['#808090', '#000000', 50, 50, 50, 50]]);showCommands();generate();edit(commands.length-1);">FrontGrad</newcmd>
+		<newcmd onclick="commands.push(['Draw Side Gradient', ['#808090', '#000000', 50, 50, 50, 50]]);showCommands();generate();edit(commands.length-1);">SideGrad</newcmd>
+		<newcmd onclick="commands.push(['Draw Front Repeat', ['#707080', 50, 50, 50, 50, 3, 10]]);showCommands();generate();edit(commands.length-1);">FrontRepeat</newcmd>
+		<newcmd onclick="commands.push(['Draw Side Repeat', ['#707080', 50, 50, 50, 50, 3, 10]]);showCommands();generate();edit(commands.length-1);">SideRepeat</newcmd>
+	</div>
+	<div id="commandwin">
+	</div>
+	<div id="editwin">
+	</div>
+	<script>
+		commands = [
+			["Set Canvas Size", [250, 250]]
+		]
+
+		const generatedcode = document.getElementById('generatedcode')
+		const cmdwin = document.getElementById('commandwin')
+		const editwin = document.getElementById('editwin')
+		const generated = document.getElementById('generated')
+		const overlay = document.getElementById('overlay')
+		const previewimg = document.getElementById('previewimg')
+		const commandparamnames = {
+			"Set Canvas Size": ["Width", "Height"],
+			"Draw Cube": ["Top color", "Front color", "Side color", "X position", "Y position", "Width"],
+			"Draw Cuboid": ["Top color", "Front color", "Side color", "X position", "Y position", "Width", "Height", "Depth"],
+			"Draw Top Square": ["Color", "X position", "Y position", "Width"],
+			"Draw Top Rectangle": ["Color", "X position", "Y position", "Width", "Height"],
+			"Draw Front Square": ["Color", "X position", "Y position", "Width"],
+			"Draw Front Rectangle": ["Color", "X position", "Y position", "Width", "Depth"],
+			"Draw Side Square": ["Color", "X position", "Y position", "Height"],
+			"Draw Side Rectangle": ["Color", "X position", "Y position", "Height", "Depth"],
+			"Draw Front Gradient": ["Color", "GradientColor", "X position", "Y position", "Width", "Depth"],
+			"Draw Side Gradient": ["Color", "GradientColor", "X position", "Y position", "Height", "Depth"],
+			"Draw Front Repeat": ["Color", "X position", "Y position", "Width", "Depth", "Repeatcount", "Repeatrange"],
+			"Draw Side Repeat": ["Color", "X position", "Y position", "Height", "Depth", "Repeatcount", "Repeatrange"],
+		}
+		var code = ""
+		function showCommands() {
+			cmdwin.innerHTML = ""
+			code = ""
+			for (var c = 0; c < commands.length; c ++) {
+				cc = commands[c]
+				cmdwin.innerHTML += `
+				<h1>
+					<edit onclick="edit(${c})">Edit</edit>
+					<dupe onclick="dupe(${c})">Dupe</dupe>
+					<remove onclick="remove(${c})">Remove</remove>
+					${cc[0]}
+					<params onmouseover="wcohighlight=${c};generate(true);">${cc[1]}</params>
+				</h1>`;
+				switch(cc[0]) {
+					case "Set Canvas Size":
+						code += "c";
+						break;
+					case "Draw Cube":
+						code += "0";
+						break;
+					case "Draw Cuboid":
+						code += "1";
+						break;
+					case "Draw Top Square":
+						code += "2";
+						break;
+					case "Draw Top Rectangle":
+						code += "3";
+						break;
+					case "Draw Front Square":
+						code += "4";
+						break;
+					case "Draw Front Rectangle":
+						code += "5";
+						break;
+					case "Draw Side Square":
+						code += "6";
+						break;
+					case "Draw Side Rectangle":
+						code += "7";
+						break;
+					case "Draw Front Gradient":
+						code += "8";
+						break;
+					case "Draw Side Gradient":
+						code += "9";
+						break;
+					case "Draw Front Repeat":
+						code += "a";
+						break;
+					case "Draw Side Repeat":
+						code += "b";
+						break;
+				}
+				for (var p = 0; p < cc[1].length; p ++) {
+					var pp = cc[1][p];
+					if (typeof(pp) == "string") {
+						code += pp.replace("#","");
+					} else {
+						code += base64.encode(pp)
+					}
+				}
+			}
+			generatedcode.innerHTML = code
+		}
+		showCommands()
+		function generate(highlight = false) {
+			wcogenerate(generated, code, false, highlight)
+		}
+		generate();
+
+		function remove(item) {
+			commands.splice(item, 1);
+			showCommands();
+			generate();
+		}
+
+		function dupe(item) {
+			var to_dupe = JSON.parse(JSON.stringify(commands[item]))
+			commands.push(to_dupe);
+			showCommands();
+			generate();
+			edit(commands.length - 1);
+		}
+
+		function edit(item) {
+			var name = commands[item][0]
+			editwin.innerHTML = `<h1>${name}</h1>`
+			for (var p = 0; p < commands[item][1].length; p ++) {
+				var pp = commands[item][1][p];
+				editwin.innerHTML += `<br><label>${commandparamnames[name][p]}</label>`
+				if (typeof(pp) == "string") {
+					editwin.innerHTML += `<input oninput="commands[${item}][1][${p}]=this.value;showCommands();generate();" type="color" value="${pp}">`
+				} else {
+					editwin.innerHTML += `<input oncontextmenu="this.value=prompt('Enter value');event.preventDefault();commands[${item}][1][${p}]=parseInt(this.value);showCommands();generate();" oninput="commands[${item}][1][${p}]=parseInt(this.value);showCommands();generate();" type="range" min="0" max="300" value="${pp}">`
+				}
+			}
+		}
+	</script>
+</body>
+</html>
